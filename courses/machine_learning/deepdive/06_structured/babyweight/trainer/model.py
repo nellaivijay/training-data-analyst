@@ -1,6 +1,8 @@
 import shutil
 import numpy as np
-import tensorflow as tf
+
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -108,6 +110,15 @@ def my_rmse(labels, predictions):
     pred_values = predictions['predictions']
     return {'rmse': tf.metrics.root_mean_squared_error(labels, pred_values)}
 
+def forward_features(estimator, key):
+    def new_model_fn(features, labels, mode, config):
+        spec = estimator.model_fn(features, labels, mode, config)
+        predictions = spec.predictions
+        predictions[key] = features[key]
+        spec = spec._replace(predictions=predictions)
+        return spec
+    return tf.estimator.Estimator(model_fn=new_model_fn, model_dir=estimator.model_dir, config=estimator.config)
+
 # Create estimator to train and evaluate
 def train_and_evaluate(output_dir):
     tf.summary.FileWriterCache.clear() # ensure filewriter cache is clear for TensorBoard events file
@@ -127,9 +138,9 @@ def train_and_evaluate(output_dir):
         config = run_config)
     
     # illustrates how to add an extra metric
-    estimator = tf.contrib.estimator.add_metrics(estimator, my_rmse)
+    estimator = tf.estimator.add_metrics(estimator, my_rmse)
     # for batch prediction, you need a key associated with each instance
-    estimator = tf.contrib.estimator.forward_features(estimator, KEY_COLUMN)
+    estimator = forward_features(estimator, KEY_COLUMN)
     
     ## TODO 2c: Set the third argument of read_dataset to BATCH_SIZE 
     ## TODO 2d: and set max_steps to TRAIN_STEPS

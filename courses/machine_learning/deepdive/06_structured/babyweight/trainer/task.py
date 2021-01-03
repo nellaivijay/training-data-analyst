@@ -4,7 +4,8 @@ import os
 
 from . import model
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -74,7 +75,7 @@ if __name__ == '__main__':
     output_dir = arguments.pop('output_dir')
     model.BUCKET     = arguments.pop('bucket')
     model.BATCH_SIZE = arguments.pop('batch_size')
-    model.TRAIN_STEPS = (arguments.pop('train_examples') * 1000) / model.BATCH_SIZE
+    model.TRAIN_STEPS = (arguments.pop('train_examples') * 100) / model.BATCH_SIZE
     model.EVAL_STEPS = arguments.pop('eval_steps')    
     print ("Will train for {} steps using batch_size={}".format(model.TRAIN_STEPS, model.BATCH_SIZE))
     model.PATTERN = arguments.pop('pattern')
